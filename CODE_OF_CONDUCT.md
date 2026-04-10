@@ -23,7 +23,7 @@ community include:
 * Accepting responsibility and apologizing to those affected by our mistakes,
   and learning from the experience
 * Focusing on what is best not just for us as individuals, but for the
-  overall community
+  overall community.
 
 Examples of unacceptable behavior include:
 
@@ -34,7 +34,7 @@ Examples of unacceptable behavior include:
 * Publishing others' private information, such as a physical or email
   address, without their explicit permission
 * Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+  professional setting.
 
 ## Enforcement Responsibilities
 
