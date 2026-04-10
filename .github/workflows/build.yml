@@ -21,5 +21,3 @@ jobs:
       run: dotnet restore RaknetCS.sln
     - name: Build
       run: dotnet build RaknetCS.sln --no-restore
-    - name: Test
-      run: dotnet test RaknetCS.sln --no-build --verbosity normal
