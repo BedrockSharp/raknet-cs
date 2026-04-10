@@ -23,11 +23,6 @@
 - ✅ **Packet Attribute System**: Easy packet registration and dispatching.
 - ✅ **Fragmentation & Reassembly**: Automatically handles large data packets.
 
-## 📂 Project Structure
-
-- **`src/RaknetCS`**: Core library containing the protocol logic, networking stack, and packet definitions.
-- **`tests/RaknetCS.Tests`**: XUnit test suite for validating network stability and protocol correctness.
-
 ## 🛠️ Getting Started
 
 ### Installation
