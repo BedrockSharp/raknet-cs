@@ -1,9 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <!-- NuGet Metadata -->
+    <PackageId>RaknetCS</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>BedrockSharp</Authors>
+    <Company>BedrockSharp</Company>
+    <Description>A high-performance, modern .NET implementation of the RakNet protocol.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/BedrockSharp/raknet-cs</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/BedrockSharp/raknet-cs</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>raknet;networking;bedrock;mcpe;mcbe;minecraft;udp;csharp;dotnet;protocol</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
 </Project>
