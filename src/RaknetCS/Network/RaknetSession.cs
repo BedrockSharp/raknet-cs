@@ -30,6 +30,7 @@ namespace RaknetCS.Network
         private ulong guid;
 
         private CancellationTokenSource _cts = new CancellationTokenSource();
+        private readonly AutoResetEvent _sendEvent = new AutoResetEvent(false);
 
         public delegate void SessionDisconnectedDelegate(RaknetSession session);
         public SessionDisconnectedDelegate SessionDisconnected = delegate { };
@@ -209,7 +210,21 @@ namespace RaknetCS.Network
              }
          }
  
-         private void HandleIncomingPacket(byte[] buffer) {
+         public void Send(Reliability reliability, byte[] buffer, bool immediate = true)
+        {
+            lock (Sendq)
+                Sendq.Insert(reliability, buffer);
+
+            if (immediate)
+                _sendEvent.Set();
+        }
+
+        public void Send(Packet packet, Reliability reliability, bool immediate = true)
+        {
+            Send(reliability, packet.Serialize(), immediate);
+        }
+
+        private void HandleIncomingPacket(byte[] buffer) {
              byte packetID = buffer[0];
  
              bool exists = Listeners.TryGetValue(packetID, out List<(Type, Delegate)> value);
@@ -231,38 +246,32 @@ namespace RaknetCS.Network
          }
  
          private void HandleConnectPing(byte[] data)
-         {
-             ConnectedPing pingPacket = new ConnectedPing(data);
-             pingPacket.Deserialize();
-             ConnectedPong pongPacket = new ConnectedPong(pingPacket.client_timestamp, Common.CurTimestampMillis());
- 
-             byte[] buf = pongPacket.Serialize();
-             lock (Sendq)
-                 Sendq.Insert(Reliability.Unreliable, buf);
-         }
+        {
+            ConnectedPing pingPacket = new ConnectedPing(data);
+            pingPacket.Deserialize();
+            ConnectedPong pongPacket = new ConnectedPong(pingPacket.client_timestamp, Common.CurTimestampMillis());
+
+            Send(pongPacket, Reliability.Unreliable);
+        }
  
          private void HandleConnectionRequestAccepted(byte[] data)
-         {
-             ConnectionRequestAccepted packet = new ConnectionRequestAccepted(data);
-             packet.Deserialize();
-             NewIncomingConnection packet_reply = new NewIncomingConnection((IPEndPoint)Socket.Socket.Client.LocalEndPoint, packet.request_timestamp, Common.CurTimestampMillis());
-             
-             byte[] buf = packet_reply.Serialize();
-             lock (Sendq)
-                 Sendq.Insert(Reliability.ReliableOrdered, buf);
-         }
+        {
+            ConnectionRequestAccepted packet = new ConnectionRequestAccepted(data);
+            packet.Deserialize();
+            NewIncomingConnection packet_reply = new NewIncomingConnection((IPEndPoint)Socket.Socket.Client.LocalEndPoint, packet.request_timestamp, Common.CurTimestampMillis());
+            
+            Send(packet_reply, Reliability.ReliableOrdered);
+        }
  
          private void HandleConnectionRequest(IPEndPoint peer_addr, byte[] data)
-         {
-             ConnectionRequest packet = new ConnectionRequest(data);
-             packet.Deserialize();
-             
-             ConnectionRequestAccepted packet_reply = new ConnectionRequestAccepted(peer_addr, 0, packet.time, Common.CurTimestampMillis());
-             
-             byte[] buf = packet_reply.Serialize();
-             lock (Sendq)
-                 Sendq.Insert(Reliability.ReliableOrdered, buf);
-         }
+        {
+            ConnectionRequest packet = new ConnectionRequest(data);
+            packet.Deserialize();
+            
+            ConnectionRequestAccepted packet_reply = new ConnectionRequestAccepted(peer_addr, 0, packet.time, Common.CurTimestampMillis());
+            
+            Send(packet_reply, Reliability.ReliableOrdered);
+        }
  
          private void HandleDisconnectionNotification()
          {
@@ -274,13 +283,11 @@ namespace RaknetCS.Network
          }
  
          public void HandleConnect()
-         {
-             ConnectionRequest requestPacket = new ConnectionRequest(guid, Common.CurTimestampMillis(), 0x00);
-             
-             byte[] buf = requestPacket.Serialize();
-             lock (Sendq)
-                 Sendq.Insert(Reliability.ReliableOrdered, buf);
-         }
+        {
+            ConnectionRequest requestPacket = new ConnectionRequest(guid, Common.CurTimestampMillis(), 0x00);
+            
+            Send(requestPacket, Reliability.ReliableOrdered);
+        }
  
          public Thread StartSender()
         {
@@ -291,7 +298,7 @@ namespace RaknetCS.Network
                 {
                     try
                     {
-                        Thread.Sleep(100);
+                        _sendEvent.WaitOne(100);
                         foreach (FrameSetPacket item in Sendq.Flush(Common.CurTimestampMillis(), PeerEndPoint))
                         {
                             byte[] sdata = item.Serialize();
@@ -319,15 +326,13 @@ namespace RaknetCS.Network
          }
  
          public void SendPing(object obj)
-         {
-             if (!Connected) return;
-             ConnectedPing pingPacket = new ConnectedPing(Common.CurTimestampMillis());
- 
-             byte[] buffer = pingPacket.Serialize();
-             lock (Sendq)
-                 Sendq.Insert(Reliability.Unreliable, buffer);
- 
-             repingCount++;
+        {
+            if (!Connected) return;
+            ConnectedPing pingPacket = new ConnectedPing(Common.CurTimestampMillis());
+
+            Send(pingPacket, Reliability.Unreliable, false);
+
+            repingCount++;
              if (repingCount < MaxRepingCount) return;
  
              HandleDisconnectionNotification();
