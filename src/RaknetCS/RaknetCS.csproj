@@ -8,7 +8,7 @@
 
     <!-- NuGet Metadata -->
     <PackageId>RaknetCS</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>BedrockSharp</Authors>
     <Company>BedrockSharp</Company>
     <Description>A high-performance, modern .NET implementation of the RakNet protocol.</Description>
